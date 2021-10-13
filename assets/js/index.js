@@ -1,4 +1,5 @@
 const cam = document.getElementById("cam");
+var contador = 0;
 
 const startVideo = () => {
     navigator.mediaDevices.enumerateDevices().then((devices) => {
@@ -22,7 +23,7 @@ const startVideo = () => {
 };
 
 const loadLabels = () => {
-    const labels = ["Gabriel"];
+    const labels = ["Gabriel", "Priscila"];
     return Promise.all(
         labels.map(async (label) => {
             const descriptions = [];
@@ -49,18 +50,41 @@ cam.addEventListener("play", async () => {
     faceapi.matchDimensions(canvas, canvasSize);
     document.body.appendChild(canvas);
     setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(cam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions().withFaceDescriptors();
+        const detections = await faceapi.detectAllFaces(cam, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
         const resizedDetections = faceapi.resizeResults(detections, canvasSize);
         const faceMatcher = new faceapi.FaceMatcher(labels, 0.6);
         const results = resizedDetections.map((d) => faceMatcher.findBestMatch(d.descriptor));
         canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
         faceapi.draw.drawDetections(canvas, resizedDetections);
         faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-        faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
         results.forEach((result, index) => {
             const box = resizedDetections[index].detection.box;
             const { label, distance } = result;
             new faceapi.draw.DrawTextField([`${label} (${parseInt(distance * 100, 10)})`], box.bottomRight).draw(canvas);
+            if (label != "unknown" && contador == 0) {
+                let timerInterval;
+                Swal.fire({
+                    title: "Você será redirecionado",
+                    html: "Em breve você será redirecionado para a Página de login",
+                    timer: 3000,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    closeOnClickOutside: false,
+                    timerProgressBar: true,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                    willClose: () => {
+                        clearInterval(timerInterval);
+                    },
+                }).then((result) => {
+                    /* Read more about handling dismissals below */
+                    if (result.dismiss === Swal.DismissReason.timer) {
+                        window.location.href = `index.php?usuario=${label}`;
+                    }
+                });
+                contador += 1;
+            }
         });
     }, 100);
 });
