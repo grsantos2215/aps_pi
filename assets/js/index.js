@@ -28,7 +28,7 @@ const loadLabels = () => {
         labels.map(async (label) => {
             const descriptions = [];
             for (let i = 1; i <= 3; i++) {
-                const img = await faceapi.fetchImage(`/assets/lib/face-api/labels/${label}/${i}.jpg`);
+                const img = await faceapi.fetchImage(`assets/lib/face-api/labels/${label}/${i}.jpg`);
                 const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor();
                 descriptions.push(detections.descriptor);
             }
@@ -38,7 +38,7 @@ const loadLabels = () => {
     );
 };
 
-Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri("/assets/lib/face-api/models"), faceapi.nets.faceLandmark68Net.loadFromUri("/assets/lib/face-api/models"), faceapi.nets.faceRecognitionNet.loadFromUri("/assets/lib/face-api/models"), faceapi.nets.faceExpressionNet.loadFromUri("/assets/lib/face-api/models"), faceapi.nets.ageGenderNet.loadFromUri("/assets/lib/face-api/models"), faceapi.nets.ssdMobilenetv1.loadFromUri("/assets/lib/face-api/models")]).then(startVideo);
+Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri("/aps_pi/assets/lib/face-api/models"), faceapi.nets.faceLandmark68Net.loadFromUri("/aps_pi/assets/lib/face-api/models"), faceapi.nets.faceRecognitionNet.loadFromUri("/aps_pi/assets/lib/face-api/models"), faceapi.nets.faceExpressionNet.loadFromUri("/aps_pi/assets/lib/face-api/models"), faceapi.nets.ageGenderNet.loadFromUri("/aps_pi/assets/lib/face-api/models"), faceapi.nets.ssdMobilenetv1.loadFromUri("/aps_pi/assets/lib/face-api/models")]).then(startVideo);
 
 cam.addEventListener("play", async () => {
     const canvas = faceapi.createCanvasFromMedia(cam);
@@ -62,28 +62,27 @@ cam.addEventListener("play", async () => {
             const { label, distance } = result;
             new faceapi.draw.DrawTextField([`${label} (${parseInt(distance * 100, 10)})`], box.bottomRight).draw(canvas);
             if (label != "unknown" && contador == 0) {
-                let timerInterval;
-                Swal.fire({
-                    title: "Você será redirecionado",
-                    html: "Em breve você será redirecionado para a Página de login",
-                    timer: 3000,
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    closeOnClickOutside: false,
-                    timerProgressBar: true,
-                    didOpen: () => {
-                        Swal.showLoading();
+                $.ajax({
+                    url: "assets/php/queries/query_login.php",
+                    type: "POST",
+                    data: `usuario=${label}&senha=${label}`,
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data);
+                        if (data.return.status == "success") {
+                            window.location.href = data.return.url;
+                        } else {
+                            console.log(data.status);
+                            Swal.fire({
+                                title: "Ops... Ocorreu um erro",
+                                text: "Infelizmente, não foi possível realizar o login. Por favor, tente novamente.",
+                                icon: "warning",
+                            }).then(function () {
+                                location.reload();
+                            });
+                        }
                     },
-                    willClose: () => {
-                        clearInterval(timerInterval);
-                    },
-                }).then((result) => {
-                    /* Read more about handling dismissals below */
-                    if (result.dismiss === Swal.DismissReason.timer) {
-                        window.location.href = `index.php?usuario=${label}`;
-                    }
                 });
-                contador += 1;
             }
         });
     }, 100);

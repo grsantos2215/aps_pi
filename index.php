@@ -9,7 +9,7 @@
 </head>
 
 <body>
-
+    <?php echo var_dump($_SESSION); ?>
 </body>
 
 </html>
