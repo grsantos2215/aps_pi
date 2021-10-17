@@ -4,30 +4,20 @@ require_once("../config.php");
 
 if (!empty($_POST) and (empty($_POST['usuario']) or empty($_POST['senha']))) {
     $response_array['status'] = "erro";
+    $response_array['dados'] = $_POST;
 }
 
 $usuario = mysqli_real_escape_string($link, $_POST['usuario']);
 $senha = mysqli_real_escape_string($link, $_POST['senha']);
 
-$sql = "
-SELECT
-	id AS `id_usuario`,
-	nome AS `nome_usuario`,
-	usuario AS `user_usuario`,
-	nivel AS `user_nivel`,
-FROM 
-	`usuarios`	
-WHERE 
-	tb_usuarios.usuario = '" . $usuario . "'
-	AND tb_usuarios.senha = '" . sha1($senha) . "'
-	AND tb_usuarios.status = '1'
-";
+$sql = "SELECT id AS `id_usuario`, nome AS `nome_usuario`, usuario AS `user_usuario`, fk_usuario_nivel AS `user_nivel` FROM  `tb_usuarios` WHERE tb_usuarios.usuario = '" . $usuario . "' AND tb_usuarios.senha = '" . sha1($senha) . "' AND tb_usuarios.status = '1'";
 
 $result = mysqli_query($link, $sql);
 
 if (mysqli_num_rows($result) != 1) {
     // Mensagem de erro quando os dados são inválidos e/ou o usuário não foi encontrado
     $response_array['status'] = "erro";
+    $response_array['sql'] = $sql;
 } else {
     // Salva os dados encontados na variável $result
     $row = mysqli_fetch_assoc($result);

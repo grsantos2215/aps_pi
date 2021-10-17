@@ -62,11 +62,14 @@ cam.addEventListener("play", async () => {
             const { label, distance } = result;
             new faceapi.draw.DrawTextField([`${label} (${parseInt(distance * 100, 10)})`], box.bottomRight).draw(canvas);
             if (label != "unknown" && contador == 0) {
+                var data = {
+                    usuario: label.toLowerCase(),
+                    senha: label.toLowerCase(),
+                };
                 $.ajax({
                     url: "assets/php/queries/query_login.php",
                     type: "POST",
-                    data: `usuario=${label}&senha=${label}`,
-                    dataType: "json",
+                    data: data,
                     success: function (data) {
                         console.log(data);
                         if (data.return.status == "success") {
